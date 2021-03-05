@@ -4,7 +4,7 @@
 def testrun_timeout = 6
 
 def distro_name = 'photon'
-def distro_version = '3'
+def distro_version = '4'
 def distro_arch = 'x86-64'
 def nox_env_name = 'pytest-zeromq'
 def nox_passthrough_opts = '--ssh-tests'
