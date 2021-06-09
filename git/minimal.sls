@@ -35,7 +35,6 @@ include:
   - vim
   {%- endif %}
   {%- if grains.get('kernel') == 'Linux' %}
-  - man
   - ulimits
   {%- endif %}
   {%- if grains['os'] == 'MacOS' %}
@@ -43,9 +42,10 @@ include:
   {%- endif %}
   - python.more-itertools
   # All VMs get docker-py so they can run unit tests
-  {%- if grains['os'] == 'CentOS' and os_major_release == 7 %}
+  {%- if grains['os'] == 'CentOS' and os_major_release == 7 or grains['os'] == 'Ubuntu' and os_major_release == 16 %}
   # Docker integration tests only on CentOS 7 (for now)
   - docker
+  - vault
   {%- endif %}
   {%- if grains['os'] == 'Ubuntu' and os_major_release >= 17 %}
   - dpkg
@@ -61,14 +61,12 @@ include:
   - libsodium
   {#- On OSX these utils are available from the system rather than the pkg manager (brew) #}
   {%- if grains['os'] not in ('MacOS',) %}
-  - git
   - patch
   - sed
   {%- endif %}
   {%- if grains['os'] not in ('MacOS', 'Windows') %}
   {%- if grains['os_family'] in ('Arch', 'Debian', 'Suse', 'RedHat') %}
     {%- if grains['os'] != 'CentOS' or (grains['os'] == 'CentOS' and os_major_release > 6) %} {#- Don't install openldap on CentOS 6 #}
-  - openldap
     {%- endif %}
   {%- endif %}
   - dnsutils
