@@ -42,7 +42,9 @@
 
 include:
   {%- if grains.get('kernel') == 'Linux' %}
-  - man
+  {%- if os_major_release != 14 and os_family not in ('Ubuntu') %}
+  - python.ansible
+  {%- endif %}
   {%- endif %}
   - python.setuptools
   - python.more-itertools
@@ -51,8 +53,9 @@ include:
   {%- endif %}
   # All VMs get docker-py so they can run unit tests
   - python.docker
-  {%- if grains['os'] == 'CentOS' and os_major_release == 7 or grains['os'] == 'Ubuntu' and os_major_release == 16 %}
+  {%- if grains['os'] == 'CentOS' and os_major_release == 7 or grains['os'] == 'Ubuntu' and os_major_release >= 16 %}
   - docker
+  - vault
   {%- endif %}
   {%- if grains['os'] == 'CentOS' and os_major_release == 7 %}
   - python.zookeeper
@@ -121,6 +124,9 @@ include:
   - python.pyvmomi
   - crypto.pycryptodomex
   - python.setproctitle
+  {%- if grains['os'] not in ('Windows',) %}
+  - python.clustershell
+  {%- endif %}
   {%- if grains['os'] not in ('MacOS', 'Windows') %}
   - python.ldap
   - python.cherrypy
@@ -191,7 +197,6 @@ include:
   - python.salttesting
   - python.pytest-salt
   {%- if grains['os'] in ['CentOS', 'Debian', 'Fedora', 'FreeBSD', 'MacOS' , 'Ubuntu'] %}
-  - python.junos-eznc
   - python.jxmlease
   {%- endif %}
   {%- if grains['os'] not in ('Amazon',) and os_family in ('Arch', 'RedHat', 'Debian') %}
@@ -204,7 +209,7 @@ include:
   {%- if not on_docker %}
   - sssd
   {%- endif %}
-  {%- if grains['kernel'] == 'Linux' %}
+  {%- if grains['kernel'] in ('Linux', 'Darwin') %}
   - ulimits
   {%- endif %}
   {%- if 'MacOS' in grains.os_family %}
@@ -242,7 +247,6 @@ clone-salt-repo:
       - service: docker
       - pkg: docker
       {%- endif %}
-      - file: /usr/bin/busybox
       {%- endif %}
       - file: testing-dir
       {%- if grains['os'] not in ('MacOS',) %}
@@ -259,7 +263,6 @@ clone-salt-repo:
       - pip: patch
       - pip: sed
       {%- else %}
-      - pkg: git
       - pkg: patch
       - pkg: sed
       {%- endif %}
@@ -289,7 +292,11 @@ clone-salt-repo:
       - pip: certifi
       {%- endif %}
       - pip: mock
+      {%- if grains['os'] == 'MacOS' %}
+      - cmd: timelib
+      {%- else %}
       - pip: timelib
+      {%- endif %}
       - pip: coverage
       - pip: unittest-xml-reporting
       - pip: apache-libcloud
@@ -301,18 +308,18 @@ clone-salt-repo:
       - pip2: supervisor
       {%- endif %}
       - pip: boto
-      - pip: moto
       - pip: kubernetes
       - pip: psutil
       - pip: tornado
       - pip: pyvmomi
       - pip: pycryptodomex
-      - pip: pyopenssl
+      {%- if grains['os'] not in ('Windows',) %}
+      - pip: clustershell
+      {%- endif %}
       {%- if (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('12.')) or (grains['os'] == 'CentOS' and os_major_release == 5) %}
       - pip: jinja2
       {%- endif %}
       {%- if grains['os'] not in ('MacOS', 'Windows') %}
-      - pip: python-ldap
       - pip: cherrypy
       - pip: pyinotify
       {%- endif %}
@@ -415,24 +422,25 @@ install-base-{{ req }}:
 {%- endif %}
 
 {#- npm v5 workaround for issue #41770 #}
-{#- node version 7.0.0 is not avaliable in MAC OSX 13(High Sierra) #}
-{#- installing node, npm, and bower manually for the MAC OS. #}
 {%- if grains['os'] == 'MacOS' %}
-download_node:
-  file.managed:
-    - source: https://nodejs.org/download/release/v7.0.0/node-v7.0.0.pkg
-    - source_hash: sha256=5d935d0e2e864920720623e629e2d4fb0d65238c110db5fbe71f73de8568c024
-    - name: /tmp/node-v7.0.0.pkg
-    - user: root
-    - group: wheel
-
-install_node:
-  macpackage.installed:
-    - name: /tmp/node-v7.0.0.pkg
-    - reload_modules: True
-
 bower:
   npm.installed:
-    - require:
-      - macpackage: install_node
+    - force_reinstall: True
+    - user: jenkins
+
+{#- workaround for https://github.com/saltstack/salt-jenkins/issues/643 #}
+update-brew:
+  cmd.run:
+    - name: brew update
+    - runas: jenkins
+
+node_binary:
+  file.symlink:
+    - name: /usr/bin/node
+    - target: /usr/local/bin/node
+
+npm_binary:
+  file.symlink:
+    - name: /usr/bin/npm
+    - target: /usr/local/bin/npm
 {%- endif %}
