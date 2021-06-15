@@ -10,5 +10,3 @@ include:
 more-itertools:
   pip.installed:
     - name: '{{ itertools }}'
-    - require:
-      - cmd: pip-install
