@@ -131,10 +131,8 @@ include:
   - heartbeat
       {%- if 'RedHat' in grains.os_family %}
         {%- if grains.osfinger is defined and grains.osfinger not in ['CentOS-6', 'Amazon Linux AMI-2018'] %}
-  - journalbeat
         {%- endif %}
       {%- else %}
-  - journalbeat
       {%- endif %}
     {%- endif %}
   {%- endif %}
