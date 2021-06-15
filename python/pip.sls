@@ -122,17 +122,13 @@ pip-update-path:
 {%- endif %}
 
 pip-install:
-  cmd.run:
-    - name: 'echo "Place holder for pip2 and pip3 installs"'
-    - require:
-      {%- if install_pip2 %}
-      - pkg.installed:
-        - name: python3-pip
+  pkg.installed:
+  {%- if install_pip2 %}
+    - name: python2-pip
       {%- endif %}
-      {%- if install_pip3 %}
-      - pkg.installed: 
-        - name: python2-pip
-      {%- endif %}
+  {%- if install_pip3 %}
+    - name: python3-pip
+  {%- endif %}
 
 
 python_virtualenv:
