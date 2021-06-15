@@ -126,16 +126,14 @@ pip-install:
     - name: 'echo "Place holder for pip2 and pip3 installs"'
     - require:
       {%- if install_pip2 %}
-      - cmd: pip2-install
+      - pkg.installed:
+        - name: python3-pip
       {%- endif %}
       {%- if install_pip3 %}
-      - cmd: pip3-install
+      - pkg.installed: 
+        - name: python2-pip
       {%- endif %}
 
-
-pip3-install:
-  pkg.installed:
-    - name: python3-pip
 
 python_virtualenv:
   pkg.installed:
