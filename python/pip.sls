@@ -133,7 +133,7 @@ pip-install:
       {%- endif %}
 
 
-python3_pip:
+pip3-install:
   pkg.installed:
     - name: python3-pip
 
