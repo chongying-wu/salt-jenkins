@@ -17,6 +17,4 @@ sed:
     - name: {{ sed }}
     {%- if install_method == 'pkg.installed' %}
     - aggregate: True
-    - require:
-      - cmd: pip-install
     {%- endif %}
