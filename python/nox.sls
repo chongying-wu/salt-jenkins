@@ -25,5 +25,3 @@ nox:
     - install_options:
       - --prefix=/usr
     {%- endif %}
-    - require:
-      - pip-install
