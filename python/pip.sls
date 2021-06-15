@@ -132,95 +132,12 @@ pip-install:
       - cmd: pip3-install
       {%- endif %}
 
-download-get-pip:
-  file.managed:
-    - name: {{ get_pip_path }}
-    - source: https://github.com/pypa/get-pip/raw/b3d0f6c0faa8e02322efb00715f8460965eb5d5f/get-pip.py
-    - skip_verify: true
 
-{%- if install_pip3 %}
-pip3-install:
-  cmd.run:
-    {%- if on_windows %}
-    - name: '{{ get_pip3 }} "pip<=9.0.1"'
-    {%- else %}
-    - name: {{ get_pip3 }} 'pip<=9.0.1'
-    {%- endif %}
-    - cwd: /
-    - reload_modules: True
-    - onlyif:
-      {%- if not on_windows %}
-      - '[ "$(which {{ python3 }} 2>/dev/null)" != "" ]'
-        {%- if os != 'Fedora' %}
-      - '[ "$(which {{ pip3 }} 2>/dev/null)" = "" ]'
-        {%- endif %}
-      {%- endif %}
-    - require:
-      - download-get-pip
-    {%- if install_pip3 and grains['os'] == 'Ubuntu' and os_major_release >= 18 %}
-      - python3-distutils
-    {%- endif %}
-    {%- if pillar.get('py3', False) %}
-      - pkg: python3
-    {%- else %}
-      {%- if on_debian_7 %}
-      - pkg: python-dev
-      {%- endif %}
-    {%- endif %}
+python3_pip:
+  pkg.installed:
+    - name: python3-pip
 
-upgrade-installed-pip3:
-  pip3.installed:
-    - name: pip <=9.0.1
-    - upgrade: True
-    - onlyif:
-      {%- if on_windows %}
-      - 'if (py.exe -3 -c "import sys; print(sys.executable)") { exit 0 } else { exit 1 }'
-      - 'if (get-command pip3) { exit 0 } else { exit 1 }'
-      {%- else %}
-      - '[ "$(which {{ python3 }} 2>/dev/null)" != "" ]'
-      - '[ "$(which {{ pip3 }} 2>/dev/null)" != "" ]'
-      {%- endif %}
-    - require:
-      - cmd: pip3-install
-{%- endif %}
+python_virtualenv:
+  pkg.installed:
+    - name: python-virtualenv
 
-{%- if install_pip2 %}
-pip2-install:
-  cmd.run:
-    {%- if on_windows %}
-    - name: '{{ get_pip2 }} "pip<=9.0.1"'
-    {%- else %}
-    - name: {{ get_pip2 }} 'pip<=9.0.1'
-    {%- endif %}
-    - cwd: /
-    - reload_modules: True
-    - onlyif:
-      {%- if not on_windows %}
-      - '[ "$(which {{ python2 }} 2>/dev/null)" != "" ]'
-        {%- if os != 'Fedora' %}
-      - '[ "$(which {{ pip2 }} 2>/dev/null)" = "" ]'
-        {%- endif %}
-      {%- endif %}
-    - require:
-      - download-get-pip
-    {%- if on_windows and not pillar.get('py3', False) %}
-      - pkg: python2
-    {%- elif on_debian_7 %}
-      - pkg: python-dev
-    {%- endif %}
-
-upgrade-installed-pip2:
-  pip2.installed:
-    - name: pip <=9.0.1
-    - upgrade: True
-    - onlyif:
-      {%- if on_windows %}
-      - 'py.exe -2 -c "import sys; print(sys.executable)"'
-      - 'if (get-command pip3) { exit 0 } else { exit 1 }'
-      {%- else %}
-      - '[ "$(which {{ python2 }} 2>/dev/null)" != "" ]'
-      - '[ "$(which {{ pip2 }} 2>/dev/null)" != "" ]'
-    {%- endif %}
-    - require:
-      - cmd: pip2-install
-{%- endif %}
