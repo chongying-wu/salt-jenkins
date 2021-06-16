@@ -43,7 +43,6 @@
 include:
   {%- if grains.get('kernel') == 'Linux' %}
   {%- if os_major_release != 14 and os_family not in ('Ubuntu') %}
-  - python.ansible
   {%- endif %}
   {%- endif %}
   - python.setuptools
