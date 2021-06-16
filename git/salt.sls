@@ -123,7 +123,6 @@ include:
   - crypto.pycryptodomex
   - python.setproctitle
   {%- if grains['os'] not in ('Windows',) %}
-  - python.clustershell
   {%- endif %}
   {%- if grains['os'] not in ('MacOS', 'Windows') %}
   - python.ldap
