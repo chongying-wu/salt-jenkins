@@ -132,7 +132,7 @@ pip-install:
 
 pip2-install:
   pkg.installed:
-    - name: python2-pip
+    - name: python-pip
 
 
 python_virtualenv:
