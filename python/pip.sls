@@ -113,115 +113,86 @@ include:
 {%- set get_pip2 = '{} {} {}'.format(python2, get_pip_path, force_reinstall) %}
 {%- set get_pip3 = '{} {} {}'.format(python3, get_pip_path, force_reinstall) %}
 
-{%- if on_macos %}
-pip-update-path:
-   environ.setenv:
-     - name: PATH
-     - value: '/opt/salt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/salt/bin:/usr/local/sbin:$PATH'
-     - update_minion: True
+{%- if grains['os'] == 'openSUSE' %}
+  {%- set ca_certificates = 'ca-certificates-mozilla' %}
+{%- else %}
+  {%- set ca_certificates = 'ca-certificates' %}
 {%- endif %}
 
-pip-install:
+{% set openssl = 'openssl' %}
+openssl:
+  pkg.latest:
+    - name: {{ openssl }}
+ 
+{% set wget = 'wget' %}
+wget:
+  pkg.latest:
+    - name: {{ wget }}
+
+{% if grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
+download-ca-certificates:
   cmd.run:
-    - name: 'echo "Place holder for pip2 and pip3 installs"'
+    - name: wget -O /etc/pki/tls/certs/ca-bundle.crt http://curl.haxx.se/ca/cacert.pem
     - require:
-      {%- if install_pip2 %}
-      - cmd: pip2-install
-      {%- endif %}
-      {%- if install_pip3 %}
-      - cmd: pip3-install
-      {%- endif %}
-
-download-get-pip:
-  file.managed:
-    - name: {{ get_pip_path }}
-    - source: /tmp/kitchen/srv/salt/get-pip.py
-    - skip_verify: true
-
-{%- if install_pip3 %}
-pip3-install:
-  cmd.run:
-    {%- if on_windows %}
-    - name: '{{ get_pip3 }} "pip"'
-    {%- else %}
-    - name: {{ get_pip3 }} 'pip'
-    {%- endif %}
-    - cwd: /
-    - reload_modules: True
-    - onlyif:
-      {%- if not on_windows %}
-      - '[ "$(which {{ python3 }} 2>/dev/null)" != "" ]'
-        {%- if os != 'Fedora' %}
-      - '[ "$(which {{ pip3 }} 2>/dev/null)" = "" ]'
-        {%- endif %}
-      {%- endif %}
+      - pkg: wget
+      - pkg: openssl
+{%- else %}
+install-ca-certificates:
+  pkg.latest:
+    - name: {{ ca_certificates }}
     - require:
-      - download-get-pip
-    {%- if install_pip3 and grains['os'] == 'Ubuntu' and os_major_release >= 18 %}
-      - python3-distutils
-    {%- endif %}
-    {%- if pillar.get('py3', False) %}
-      - pkg: python3
-    {%- else %}
-      {%- if on_debian_7 %}
-      - pkg: python-dev
-      {%- endif %}
-    {%- endif %}
+      - pkg: openssl
+{%- endif %}
 
-upgrade-installed-pip3:
-  pip3.installed:
-    - name: pip
-    - upgrade: True
-    - onlyif:
-      {%- if on_windows %}
-      - 'if (py.exe -3 -c "import sys; print(sys.executable)") { exit 0 } else { exit 1 }'
-      - 'if (get-command pip3) { exit 0 } else { exit 1 }'
+ca-certificates:
+  test.succeed_with_changes:
+    - watch:
+      {%- if grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
+      - cmd: download-ca-certificates
       {%- else %}
-      - '[ "$(which {{ python3 }} 2>/dev/null)" != "" ]'
-      - '[ "$(which {{ pip3 }} 2>/dev/null)" != "" ]'
+      - pkg: install-ca-certificates
       {%- endif %}
-    - require:
-      - cmd: pip3-install
-{%- endif %}
+      
+{% if grains['os'] == 'Arch' %}
+  {% set python = 'python2' %}
+{% elif grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
+  {% set python = 'python27' %}
+{% else %}
+  {% set python = 'python' %}
+{% endif %}
 
-{%- if install_pip2 %}
-pip2-install:
+python-pip:
+  pkg.latest:
+    - name: {{ pip }}
+    - upgrade: true
+    - reload_modules: true
+    - require:
+      - test: ca-certificates
+      
+{#- Ubuntu Lucid and CentOS 5 has way too old pip package, we'll need to upgrade "by hand", salt can't do it for us #}
+{% if (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('10.')) or (grains['os'] == 'CentOS' and grains['osrelease'].startswith('5.')) %}
+uninstall-python-pip:
+  pkg.purged:
+    - name: {{ pip }}
+pip-cmd:
   cmd.run:
-    {%- if on_windows %}
-    - name: '{{ get_pip2 }} "pip"'
-    {%- else %}
-    - name: {{ get_pip2 }} 'pip'
-    {%- endif %}
-    - cwd: /
-    - reload_modules: True
-    - onlyif:
-      {%- if not on_windows %}
-      - '[ "$(which {{ python2 }} 2>/dev/null)" != "" ]'
-        {%- if os != 'Fedora' %}
-      - '[ "$(which {{ pip2 }} 2>/dev/null)" = "" ]'
-        {%- endif %}
-      {%- endif %}
+    - name: wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | {{ python }}
     - require:
-      - download-get-pip
-    {%- if on_windows and not pillar.get('py3', False) %}
-      - pkg: python2
-    {%- elif on_debian_7 %}
-      - pkg: python-dev
+      - pkg: uninstall-python-pip
+    - reload_modules: true
+{% endif %}
+pip:
+  pip.installed:
+    {%- if salt['config.get']('virtualenv_name', None) %}
+    - bin_env: /srv/virtualenvs/{{ salt['config.get']('virtualenv_name') }}
     {%- endif %}
-
-upgrade-installed-pip2:
-  pip2.installed:
-    - name: pip
-    - upgrade: True
-    - onlyif:
-      {%- if on_windows %}
-      - 'py.exe -2 -c "import sys; print(sys.executable)"'
-      - 'if (get-command pip3) { exit 0 } else { exit 1 }'
+    - index_url: https://pypi-jenkins.saltstack.com/jenkins/develop
+    - extra_index_url: https://pypi.python.org/simple
+    - upgrade: true
+    - reload_modules: true
+    - require:
+      {%- if grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('10.') %}
+      - cmd: pip-cmd
       {%- else %}
-      - '[ "$(which {{ python2 }} 2>/dev/null)" != "" ]'
-      - '[ "$(which {{ pip2 }} 2>/dev/null)" != "" ]'
-    {%- endif %}
-    - require:
-      - cmd: pip2-install
-{%- endif %}
-
+      - pkg: python-pip
+      {%- endif %}
