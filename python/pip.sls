@@ -142,9 +142,9 @@ download-get-pip:
 pip3-install:
   cmd.run:
     {%- if on_windows %}
-    - name: '{{ get_pip3 }} "pip<=9.0.1"'
+    - name: '{{ get_pip3 }} "pip"'
     {%- else %}
-    - name: {{ get_pip3 }} 'pip<=9.0.1'
+    - name: {{ get_pip3 }} 'pip'
     {%- endif %}
     - cwd: /
     - reload_modules: True
@@ -170,7 +170,7 @@ pip3-install:
 
 upgrade-installed-pip3:
   pip3.installed:
-    - name: pip <=9.0.1
+    - name: pip
     - upgrade: True
     - onlyif:
       {%- if on_windows %}
@@ -188,9 +188,9 @@ upgrade-installed-pip3:
 pip2-install:
   cmd.run:
     {%- if on_windows %}
-    - name: '{{ get_pip2 }} "pip<=9.0.1"'
+    - name: '{{ get_pip2 }} "pip"'
     {%- else %}
-    - name: {{ get_pip2 }} 'pip<=9.0.1'
+    - name: {{ get_pip2 }} 'pip'
     {%- endif %}
     - cwd: /
     - reload_modules: True
@@ -211,7 +211,7 @@ pip2-install:
 
 upgrade-installed-pip2:
   pip2.installed:
-    - name: pip <=9.0.1
+    - name: pip
     - upgrade: True
     - onlyif:
       {%- if on_windows %}
