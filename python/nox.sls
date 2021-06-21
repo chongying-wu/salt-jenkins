@@ -12,7 +12,7 @@ include:
   - python.pip
 
 nox:
-  pip.installed:
+  pip.install:
     - name: 'nox-py2=={{ nox_version }}'
     {%- if grains['os'] == 'Windows' %}
     - unless:
