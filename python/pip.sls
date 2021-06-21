@@ -111,16 +111,14 @@ include:
   - noop-placeholder {#- Make sure there's at least an entry in this 'include' statement #}
 
 
-python packages:
-  pkg.installed:
-    - pkgs:
-      - python3
-      - python3-pip
-      - python-pip  # saltstack needs python2 pip
+python-pip:
+  cmd.run:
+    - name: |
+        easy_install --script-dir=/usr/bin -U pip
+    - cwd: /
+    - reload_modules: true
 
-# Python 3 packages used in installing
-{% for pkg in ['six'] %}
-{{ pkg }}:
+pep8:
   pip.installed:
-    - bin_env: /usr/bin/pip3
-{% endfor %}
+    - require:
+      - cmd: python-pip
