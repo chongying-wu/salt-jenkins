@@ -190,7 +190,7 @@ pip-cmd:
     - reload_modules: true
 {% endif %}
 pip:
-  pip.installed:
+  pip.install:
     {%- if salt['config.get']('virtualenv_name', None) %}
     - bin_env: /srv/virtualenvs/{{ salt['config.get']('virtualenv_name') }}
     {%- endif %}
