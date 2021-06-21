@@ -2,5 +2,5 @@ include:
   - python.pip
 
 tox:
-  pip.install:
+  pip.installed:
     - name: tox
