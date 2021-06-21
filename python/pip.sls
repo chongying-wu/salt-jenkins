@@ -110,97 +110,17 @@ include:
   {%- endif %}
   - noop-placeholder {#- Make sure there's at least an entry in this 'include' statement #}
 
-{%- set get_pip2 = '{} {} {}'.format(python2, get_pip_path, force_reinstall) %}
-{%- set get_pip3 = '{} {} {}'.format(python3, get_pip_path, force_reinstall) %}
 
-{%- if grains['os'] == 'openSUSE' %}
-  {%- set ca_certificates = 'ca-certificates-mozilla' %}
-{%- else %}
-  {%- set ca_certificates = 'ca-certificates' %}
-{%- endif %}
+python packages:
+  pkg.installed:
+    - pkgs:
+      - python3
+      - python3-pip
+      - python-pip  # saltstack needs python2 pip
 
-{% set openssl = 'openssl' %}
-openssl:
-  pkg.latest:
-    - name: {{ openssl }}
- 
-{% set wget = 'wget' %}
-wget:
-  pkg.latest:
-    - name: {{ wget }}
-
-{% if grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
-download-ca-certificates:
-  cmd.run:
-    - name: wget -O /etc/pki/tls/certs/ca-bundle.crt http://curl.haxx.se/ca/cacert.pem
-    - require:
-      - pkg: wget
-      - pkg: openssl
-{%- else %}
-install-ca-certificates:
-  pkg.latest:
-    - name: {{ ca_certificates }}
-    - require:
-      - pkg: openssl
-{%- endif %}
-
-ca-certificates:
-  test.succeed_with_changes:
-    - watch:
-      {%- if grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
-      - cmd: download-ca-certificates
-      {%- else %}
-      - pkg: install-ca-certificates
-      {%- endif %}
-      
-{% if grains['os'] == 'Arch' %}
-  {% set python = 'python2' %}
-{% elif grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
-  {% set python = 'python27' %}
-{% else %}
-  {% set python = 'python' %}
-{% endif %}
-
-{%- if grains['os'] == 'Arch' %}
-  {% set pip = 'python2-pip' %}
-{%- elif grains['os_family'] == 'RedHat' and grains['osmajorrelease'][0] == '5' %}
-  {% set pip = 'python26-pip' %}
-{%- else %}
-  {% set pip = 'python-pip' %}
-{%- endif %}
-
-python-pip:
-  pkg.latest:
-    - name: {{ pip }}
-    - upgrade: true
-    - reload_modules: true
-    - require:
-      - test: ca-certificates
-      
-{#- Ubuntu Lucid and CentOS 5 has way too old pip package, we'll need to upgrade "by hand", salt can't do it for us #}
-{% if (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('10.')) or (grains['os'] == 'CentOS' and grains['osrelease'].startswith('5.')) %}
-uninstall-python-pip:
-  pkg.purged:
-    - name: {{ pip }}
-pip-cmd:
-  cmd.run:
-    - name: wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | {{ python }}
-    - require:
-      - pkg: uninstall-python-pip
-    - reload_modules: true
-{% endif %}
-pip:
-  pip.install:
-    {%- if salt['config.get']('virtualenv_name', None) %}
-    - bin_env: /srv/virtualenvs/{{ salt['config.get']('virtualenv_name') }}
-    {%- endif %}
-    - index_url: https://pypi-jenkins.saltstack.com/jenkins/develop
-    - extra_index_url: https://pypi.python.org/simple
-    - upgrade: true
-    - reload_modules: true
-    - require:
-      {%- if grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('10.') %}
-      - cmd: pip-cmd
-      {%- else %}
-      - pkg: python-pip
-      {%- endif %}
+# Python 3 packages used in installing
+{% for pkg in ['six'] %}
+{{ pkg }}:
+  pip.installed:
+    - bin_env: /usr/bin/pip3
+{% endfor %}
