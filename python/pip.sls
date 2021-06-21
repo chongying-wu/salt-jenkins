@@ -117,7 +117,7 @@ include:
 prereqs_pip:
   pkg.latest:
     - pkgs: 
-      - python2-pip
+      - python-pip
       - python3-pip
       - gcc
       - python-devel
