@@ -41,7 +41,7 @@ nox:
   {%- if not on_windows %}
     - name: "{{ pip }} install 'nox' 'virtualenv'"
   {%- else %}
-    - name: {{ pip }} install nox virtualenv
+    - name: {{ pip }} install nox virtualenv -i https://pypi.tuna.tsinghua.edu.cn/simple/
   {%- endif %}
     - require:
       - pip-install
