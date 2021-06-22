@@ -39,7 +39,7 @@ include:
 nox:
   cmd.run:
   {%- if not on_windows %}
-    - name: "{{ pip }} install 'nox' 'virtualenv'"
+    - name: "sudo {{ pip }} install 'nox' 'virtualenv' -i https://pypi.tuna.tsinghua.edu.cn/simple/"
   {%- else %}
     - name: {{ pip }} install nox virtualenv -i https://pypi.tuna.tsinghua.edu.cn/simple/
   {%- endif %}
