@@ -39,9 +39,9 @@ include:
 nox:
   cmd.run:
   {%- if not on_windows %}
-    - name: sudo {{ pip }} --default-timeout=1000 install nox virtualenv -i https://pypi.douban.com/simple
+    - name: sudo {{ pip }} --default-timeout=100 install nox virtualenv
   {%- else %}
-    - name: {{ pip }} install nox virtualenv -i https://pypi.tuna.tsinghua.edu.cn/simple/
+    - name: {{ pip }} install nox virtualenv 
   {%- endif %}
     - require:
       - pip-install
