@@ -39,7 +39,7 @@ include:
 nox:
   cmd.run:
   {%- if not on_windows %}
-    - name: sudo {{ pip }} --default-timeout=100 install nox==2021.6.12 --index-url http://pypi.shopee.io/simple/ --trusted-host pypi.shopee.io
+    - name: sudo {{ pip }} --default-timeout=100 install nox==2020.12.31 --index-url http://pypi.shopee.io/simple/ --trusted-host pypi.shopee.io
   {%- else %}
     - name: {{ pip }} install nox virtualenv 
   {%- endif %}
