@@ -57,16 +57,4 @@ symlink-nox:
       - nox
   {%- endif %}
 
-nox-version:
-  cmd.run:
-  {%- if not on_windows %}
-    - name: 'nox --version'
-  {%- else %}
-    - name: 'py -3 -m nox --version'
-  {%- endif %}
-    - require:
-      - nox
-  {%- if grains['os'] == 'MacOS' %}
-    - runas: vagrant
-  {%- endif %}
 {%- endif %}
